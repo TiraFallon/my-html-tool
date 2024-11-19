@@ -1,0 +1,585 @@
+
+<!-- saved from url=(0067)file:///D:/Misc/FFXII/FF%20XII%20%E2%80%93%20RNG%20Cure%20List.html -->
+<html><!--
+
+info about how random numbers are consumed:
+  http://www.kotha.net/ff12random/random-en.html
+
+--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>FF XII – RNG Cure List</title>
+  <link rel="stylesheet" type="text/css" media="all" href="./FF XII - RNG Cure List_files/css">
+  <style>
+    body, input, select, button {
+      font-family: Montserrat, sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #EEE;
+      color: black;
+    }
+    h1, h2 {
+      font-size: 200%;
+      font-weight: 400;
+      margin: 0 0 0.5em;
+      line-height: 1.3em;
+    }
+    h2 {
+      font-size: 150%;
+    }
+    h1 {
+      padding-bottom: 0.2em;
+      border-bottom: solid 1px;
+      text-align: center;
+    }
+    p {
+      margin: 0 0 0.5em;
+    }
+    cite {
+      display: block;
+      font-style: normal;
+      margin: 1em 3em;
+    }
+    p.action {
+      margin: 5em;
+      text-align: center;
+    }
+    #note {
+      color: #666;
+      font-size: 13px;
+      line-height: 1.3em;
+    }
+    #contain {
+      margin: 0 auto;
+      min-height: 100%;
+      width: 600px;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 1px 5px -2px rgba(0,0,0,0.4);
+      box-sizing: border-box;
+    }
+    #notice {
+      font-style: italic;
+      font-size: 140%;
+      margin: 2em 1em;
+      text-align: center;
+    }
+    #progress {
+      width: 2.5em;
+      color: #666;
+      display: inline-block;
+      text-align: right;
+    }
+    #find {
+      text-align: center;
+    }
+    .form {
+      padding-bottom: 1em;
+      border-bottom: dashed 1px #666;
+      margin-bottom: 1em;
+      line-height: 1.8em;
+    }
+    .error {
+      color: #C22;
+      background: #FEE;
+      border-top: solid 1px;
+      border-bottom: solid 1px;
+      margin: 0.75em -20px;
+      padding: 3px 20px;
+    }
+    [name=values] {
+      width: 150px;
+    }
+    table {
+      width: 100%;
+      font-family: 'consolas','courier new',fixed-width;
+            font-size: 12px;
+    }
+    td, th {
+      text-align: right;
+      padding: 3px;
+    }
+    th {
+      text-align: center;
+      font-weight: normal;
+      background: #CCC;
+    }
+    tr.match td {
+      background: #EEF;
+    }
+    td.choco {
+      color: #C22;
+      font-weight: bold;
+    }
+  </style>
+  <script src="./FF XII - RNG Cure List_files/mersenne-twister.2017.js.download"></script>
+  <script src="./FF XII - RNG Cure List_files/jquery.min.js.download"></script>
+  <script>
+    var a; // Array of randomly generated values.
+    var m; // Mersenne Twister generator.
+    var start, end; // Start and end points for numbers generated so far.
+    var step = 100 * 1000;
+    
+    var spell = NaN;
+    var level = NaN;
+    var magic = NaN;
+    var serenity = NaN;
+    
+    function fNum(number)
+    {
+      return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    
+    function generate(callback) {
+      if (!$.isFunction(callback)) callback = function (){};
+      
+      end += step;
+
+      $('#forms').hide();
+      $('#notice').show().html(
+        'Generating '
+          + fNum(step)
+          + (start > 0 ? ' More' : '')
+          + ' Random Numbers&hellip; <span id=progress></span>'
+        );
+      
+      generate_random(function () {
+        $('#notice').hide();
+        $('#forms').show();
+        callback();
+      });
+    }
+    
+    function generate_random(callback) {
+      $('#progress').text(((a.length - start) / (end - start) * 100).toFixed(0) + '%');
+      if (a.length >= end)
+      {
+        start = end;
+        setTimeout(callback,0);
+        return;
+      }
+      
+      for (var i = 0; i < 1000; i++)
+        a.push(m.genrand_int32());
+      
+      setTimeout(function(){
+        generate_random(callback)
+      },0);
+    }
+    
+    function cure(random) {
+      return Math.floor(
+        (spell + random % (spell*12.5) / 100)
+          * ((level + magic) * magic / 256 + 2)
+          * serenity
+        );
+    }
+    
+    function show_cure() {
+      $('.error').hide();
+      $('#note').hide();
+      $('#notice').hide();
+      $('#output').hide();
+
+      $('#forms').show();
+      $('#set_cure').show();
+      $('#find').hide();
+    }
+	
+	function contains_sequence(seed, seq) {
+	  m = new MersenneTwister(seed, true);
+	  var cure_values = [];
+	  for (var i = 0; i < 10; i++) {
+		var rn = m.genrand_int32();
+		cure_values.push(cure(rn));
+	  }
+	  
+	  for (var i = 0; i < cure_values.length - seq.length; i++) {
+		if (cure_values[i] == seq[0]) {
+		  var same = true;
+		  for (var j = 0; j < seq.length; j++) {
+			if (cure_values[i + j] != seq[j]) {
+			  same = false;
+			  break;
+			}
+		  }
+		  if (same) {
+			return true;
+		  }
+		}
+	  }
+	  return false;
+	}
+	
+    function compute_seed_switch() {
+	
+	  var seq = $('[name=seq]').val().split(',');
+	  
+	  for (var seed = 5800000; seed < 8000000; seed++) {
+		// Find sequence
+        if (contains_sequence(seed, seq)) {
+		  return seed;
+		}
+	  }
+	  
+	  return 0;
+	}
+	
+	function compute_seed_pc() {
+	
+	  var t_start = $('[name=t_start]').val() - 15;
+	  var t_end = t_start + 30;
+	  
+	  var frame_start = 0;
+	  var frame_end = 3600;
+	  
+	  var seq = $('[name=seq]').val().split(',');
+	  
+	  var ref_time = 1517673600;
+	  var ref_time_term = 696964805;
+	  
+	  for (var t = t_start; t < t_end; t++) {
+	    var time_term = ref_time_term + (t - ref_time) * 33;
+		for (var f = frame_start; f < frame_end; f++) {
+		  var frame_term = 600 * f;
+		  var seed = time_term + frame_term;
+		  
+		  // Find sequence
+          if (contains_sequence(seed, seq)) {
+		    return seed;
+		  }
+		}
+	  }
+	  
+	  return 0;
+	}
+    
+    function set_cure() {
+      $('#set_cure .error').hide();
+	        
+      var game = $('[name=game]').val();
+      
+      var power = (game == 'original') ? [20,45,85,145] : [20,46,86,120];
+
+      spell = power[parseInt($('[name=spell]').val())];
+      level = parseInt($('[name=level]').val());
+      magic = parseInt($('[name=magic]').val());
+      serenity = $('[name=serenity]').is(':checked') ? 1.5 : 1;
+ 
+       if (isNaN(level) || isNaN(magic))
+        {
+          $('#set_cure .error').show().text(
+            'Make sure fields all fields are filled.'
+            );
+          
+          return;
+        }
+		
+	  var seed = 4537;
+	  if (game == "TZA_PC") {
+	    seed = compute_seed_pc();
+	  }
+      else if (game == "TZA_Switch") {
+        seed = compute_seed_switch();
+      }
+	  
+	  if (seed == 0) {
+	    $('#no_seed').show();
+	    return;
+	  }
+	  
+	  console.log(seed);
+ 
+      m = new MersenneTwister(seed, game == 'TZA' || game == 'TZA_PC' || game == 'TZA_Switch');
+      
+      start = end = 0;
+      a = [];
+      generate(function() {
+        $('#set_cure').hide();
+        $('#find').show();
+        show_values();
+      });
+    }
+    
+    function find(start) {
+      if (isNaN(start)) start = 0;
+    
+      $('#find .error').hide();
+      
+      var v = [];
+      
+      var values = $('[name=values]').val().split(',');
+      
+      for (var i = 0; i < values.length; i++)
+      {
+        var value = parseInt(values[i].trim());
+        if (isNaN(value))
+        {
+          $('#find .error').show().text(
+            "Invalid value: '" + values[i] + "'"
+            );
+        
+          return;
+        }
+        
+        v.push(value);
+      }
+      
+      $('#forms').hide();
+      $('#notice').show().html(
+        'Searching '
+          + fNum(a.length)
+          + ' Random Numbers&hellip; <span id=progress></span>'
+        );
+      
+      find_values(v, start, 500 + (v.length - 1), function (i) {
+        show_values(i, v.length);
+        $('#notice').hide();
+        $('#forms').show();
+      }, function () {
+        show_values();
+        $('#notice').hide();
+        $('#forms').show();
+        $('#find .error').show().html(
+          "No matches found. <button onclick='find_gen()'>Generate more numbers?</button>"
+        );
+      });
+    }
+	
+	function find_pattern()
+	{
+	  $('[name=pattern_pos]').text("");
+	
+	  var pattern = $('[name=search_pattern]').val().split(',');
+	  
+	  // Search for pattern
+	  for (var i = 0; i < end; i++) {
+	    var same = true;
+		// Try to match the pattern
+		for (var j = 0; j < pattern.length; j++) {
+		  var gte = false;
+          var lt = false;
+          var eq = false;
+		  var n = pattern[j];
+		  if (n.includes('+')) gte = true;
+		  else if (n.includes('-')) lt = true;
+		  else eq = true;
+
+		  n = n.replace(/[\+\-\s]+/g, '');
+		  if (gte && a[i + j] % 100 < n) same = false;
+		  else if (lt && a[i + j] % 100 >= n) same = false;
+		  else if (eq && a[i + j] % 100 != n) same = false;
+		}
+		if (same) {
+		  $('[name=pattern_pos]').text(i);
+		  return i;
+		}
+	  }
+	  
+	}
+    
+    function find_values(values, start, chunk, success, failure)
+    {
+      // Last possible starting index for the search values.
+      var last_start = a.length - (values.length - 1);
+      
+      if (start > last_start)
+      {
+        failure();
+        return;
+      }
+      
+      $('#progress').text((start / a.length * 100).toFixed(0) + '%');
+      var index = -1;
+      for (var i = start; index < 0 && i <= last_start && i < start + chunk; i++)
+      {
+        var match = true;
+        for (var j = 0; match && j < values.length; j++) {
+          match = (cure(a[i+j]) == values[j]);
+        }
+        if (match) {
+          index = i;
+        }
+      }
+      
+      if (index >= 0)
+      {
+        success(index);
+      }
+      else
+      {
+        var overlap = values.length - 1;
+        setTimeout(function(){
+          find_values(values, start + chunk - overlap, chunk, success, failure);
+        },0);
+      }
+    }
+    
+    function show_values(start, matched) {
+      $('#output').empty().show();
+      
+      // default values
+      if (isNaN(start)) start = 0;
+      if (isNaN(matched)) matched = 0;
+      
+      if (start < 0) return;
+
+      var length = 100 + matched;
+
+      $('#output').append(
+        "<tr><th>#</th><th>Value</th><th>HP</th><th>Percent</th></tr>");
+        
+      for (var j = 0; j < length && start + j < a.length; j++)
+      {
+        var i = start + j;
+        var cureVal = cure(a[i]);
+        $('#output').append(
+          "<tr" + (j < matched ? " class=match" : "") + "><td>" + i + "</td>"
+            + "<td" + (a[i] < 16777216 ? " class=choco" : "") + ">" + fNum(a[i]) + "</td><td>" + (isNaN(cureVal) ? "&mdash;" : fNum(cureVal)) + "</td><td>" + (a[i] % 100 + 1) + "%"
+            + "</td></tr>");
+      }
+      
+      var prev = "";
+      var next = "";
+      
+      if (start > 0) prev = '<button onclick="show_values(' + Math.max(0, start - 100) + ')">&laquo;</button> ';
+      if (start + length < a.length) next = ' <button onclick="show_values(' + (start + length) + ')">&raquo;</button>';
+      
+      $('#output').append(
+        "<tr><th colspan=4>" + prev + "Showing values " + fNum(start + 1) + "&ndash;" + fNum(start + length) + " of " + fNum(a.length) + next + "</th></tr>");
+    }
+    
+    function find_gen() {
+      var old_end = end;
+      generate(function() {
+        find(old_end);
+      });
+    }
+	
+	function get_time() {
+	  var time = Math.floor(Date.now() / 1000);
+	  $('[name=t_start]').val(time);
+	}
+    
+    $(function(){
+      $('#forms').show();
+      $('#note').hide();
+      
+      $('#notice').hide();
+      $('#set_cure').show();
+	  
+	  $('[name=game]').on('change', function() {
+	    if ($('[name=game]').val() == "TZA_PC" || $('[name=game]').val() == "TZA_Switch") {
+		  $('#pc_note').show();
+		}
+		else {
+		  $('#pc_note').hide();
+		}
+	  });
+    });
+    </script>
+</head>
+<body><div id="contain">
+  <h1>Final Fantasy XII – RNG Cure List</h1>
+  <div id="notice" style="display: none;">
+    This site is powered by Javascript.<br>
+    Javascript must be enabled for this site to function.
+  </div>
+  <div id="forms" style="">
+    <div id="note" style="display: none;">
+      <p>This website aims to allow quick and easy searching for your position in FFXII’s RNG.</p>
+      <p>Simply enter your game information and character stats, along with the desired healing spell, and you can use successive casts to find your current RNG position.</p>
+      <p><a href="http://www.fftogether.com/forum/index.php?topic=2778">Check out FFTogether for more information about the RNG method.</a></p>
+      <p>
+        This site is built entirely on information gathered by others.
+        Thanks especially to <a href="https://forum.speeddemosarchive.com/post/ffxii__new_run_complete_496.html">Tranquilite for figuring out RNG in The Zodiac Age</a> and to the helpful people on the internet who pointed me in the right direction.
+      </p>
+      <cite>— <a href="http://markegli.com/">Mark Egli</a></cite>
+      <p class="action"><button onclick="show_cure()">Let’s get started!</button></p>
+    </div>
+    <div class="form" id="set_cure" style="">
+      <h2>Calculate Cure Values</h2>
+      <label>
+        Game:
+        <select name="game">
+          <option value="original">Original release</option>
+          <option value="IZJS">International Zodiac Job System</option>
+          <option value="TZA">The Zodiac Age</option>
+		  <option value="TZA_PC">The Zodiac Age (PC)</option>
+		  <option value="TZA_Switch" selected="">The Zodiac Age (Switch)</option>
+        </select>
+      </label>
+      <br>
+      <label>
+        Spell:
+        <select name="spell">
+          <option value="0">Cure</option>
+          <option value="1">Cura</option>
+          <option value="2">Curaga</option>
+          <option value="3">Curaja</option>
+        </select>
+      </label>
+      <br>
+      <label>
+        Character Level:
+        <input type="number" name="level" min="1" max="99" value="3">
+      </label>
+      <br>
+      <label>
+        Magic Power:
+        <input type="number" name="magic" min="0" max="999" value="23">
+      </label>
+      <br>
+      <label>
+        <input type="checkbox" name="serenity">
+        Serenity
+      </label>
+	  <br>
+	  <div id="pc_note">
+        <hr>
+	    <p>
+	      Note: Due to the changes in how the RNG is initialized in the PC/Switch version, some additional information needs to be provided. Please cold boot the game 
+		  and load your save file as quickly as possible. As soon as you load your save file, click on the button to get the current time. Then cast Cure at least
+		  five times and enter the values into the field below and finally click Calculate. If the seed is found, a list of cure values will be displayed like for
+		  all the other versions of the game.
+	    </p>
+	    <label>
+	      Save file was loaded at: <input type="number" name="t_start" min="0" max="9999999999"> <button onclick="get_time()">Get Time</button>
+	    </label>
+	    <br>
+	    <label>
+	      First five cures (comma separated):
+		  <input name="seq">
+	    </label>
+	    <br>
+	  </div>
+      <button onclick="set_cure()">Calculate</button>
+      <div class="error" style="display:none"></div>
+	  <div id="no_seed" style="display:none">No seed found.</div>
+    </div>
+    <div class="form" id="find" style="display:none">
+      <label>
+        Search casts (comma separated):
+        <input name="values">
+      </label>
+      <button onclick="find()">Find</button>
+      <button onclick="show_cure()">Change Spell</button>
+	  
+	  <label>
+	   Search percentage pattern:
+	   <input name="search_pattern">
+	  </label>
+	  <button onclick="find_pattern()">Find</button>
+	  <br>
+	  <label>
+	    Pattern found at:
+	  </label>
+	  <label name="pattern_pos" />
+	  
+      <div class="error" style="display:none"></div>
+    </div>
+    <table id="output" style="display: none;"></table>
+</div></div></body></html>
